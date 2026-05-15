@@ -2,12 +2,13 @@
 
 以下配置推荐对照 worker 配置文件示例 [workers.conf](workers.conf) 查看。
 
-带 * 号的配置是数组，需要使用["xxx","xxx"]格式配置
+带 * 号的配置是数组，需要根据对应配置项的类型填写；例如字符串数组使用 `["xxx","xxx"]`，整数数组使用 `[23, 24]`。
 
 建议在使用 cgroup、docker、zfs、snapshot 等选项前先熟悉相关知识。
 
 - `[global]`
   这是一个全局设置，对所有配置均生效
+  - `name`: worker 名称，用于标识当前 worker
   - `mirror_dir`: 设置全局的同步路径，各个同步项目会尝试在该目录下创建同名子文件夹并同步
   - `concurrent`: 最大并发数量，即同时最多几个仓库同步（手动触发的不计）
   - `interval`: 间隔时间，即同步完成后下次同步的时间，单位是分钟
@@ -20,9 +21,16 @@
   - `dangerous_global_success_exit_codes`*: 允许一些非致命的同步失败·视为成功（如 rsync 返回 23/24 等常见的“同步完成但有部分文件问题”）
   - `dangerous_global_rsync_success_exit_codes`*: 作用同上，但仅针对`rsync`同步方式有效
 - `[manager]`
-  - `api_base`: manager的访问端口，在`manager.conf`中配置
-  - `api_base_list`*: 如果有多个manager，在此处以数组方式填写，所有信息均会同步发送到各个manager，填写该选项将覆盖`api_base`
+  - `api_base`: manager 的访问基础地址（完整 URL），在`manager.conf`中配置，例如 `http://localhost:12345`
+  - `api_base_list`*: 如果有多个 manager，在此处以数组方式填写各个 manager 的完整基础地址（URL），所有信息均会同步发送到各个 manager，填写该选项将覆盖`api_base`
   - `ca_cert`: 同上，证书设置（注意是公钥）
+- `[server]`
+  此处为 worker 自身 HTTP 服务的配置选项
+  - `hostname`: worker 对外使用的主机名
+  - `listen_addr`: worker HTTP 服务监听地址
+  - `listen_port`: worker HTTP 服务监听端口
+  - `ssl_cert`: HTTPS 证书文件路径
+  - `ssl_key`: HTTPS 证书私钥文件路径
 - `[zfs]`
   这是用来检查同步目录是否是通过 zfs 挂载了的。如果启用，那么会强制检查文件夹是否挂载到 zpool 上（使用`mountpoint /path`检查）。检查不通过的会直接同步失败，同时根据 zpool 参数输出建议创建的zpool名称，但***不会自动创建对应的 zpool ***
   - `enable`: 是否启用
@@ -35,12 +43,13 @@
   此处为全局生效的 docker 配置选项
   - `enable`: 是否开启 docker
   - `volumes`: 挂载的卷
-  - `Options`: 默认选项
+  - `options`: 默认选项
 - `[include]`: 包含各个仓库的 conf 文件，组成一个完整的配置
-  - `include_mirrors`*: 需要添加的文件路径，可以使用`*`匹配，但是不能使用其他匹配，如`**`，示例：`"/tmp/tunasync123/*.conf"`
+  - `include_mirrors`: 需要添加的文件路径模式，使用单个字符串配置，可以使用`*`匹配，但是不能使用其他匹配，如`**`，示例：`"/tmp/tunasync123/*.conf"`
 - `[[mirrors]]`
   各个仓库的具体设置，部分同名配置可省略使用全局配置。优先级: `mirrors` > `global`
   - `name`: 仓库名
+  - `upstream`: 上游地址/同步源地址
   - `provider`: 设置同步方式，以下分别介绍各自的配置
     -  `provider = "command"`: 使用命令同步
        -  `command`: 同步脚本/命令
@@ -95,7 +104,7 @@
   - `exec_on_success_extra`*: 同`exec_on_success`，但是在`[global]exec_on_success`基础上增加。建议`mirror`内`exec_on_success_extra`和`exec_on_success`二选一设置
   - `exec_on_failure_extra`*: 同上
   - `use_ipv6`: 是否使用 ipv6
-  - `use_ipv4`: 是否使用 ipv4，二者不可同时开启或关闭
+  - `use_ipv4`: 是否使用 ipv4；若 `use_ipv6` 和 `use_ipv4` 均为关闭，则不会强制指定地址族，而是使用 rsync 的默认地址选择行为
   - `docker_image`: docker 镜像名称
   - `docker_volumes`*: 在`global`的基础上，追加 docker 目录映射
   - `docker_options`*: 在`global`的基础上，追加 docker 选项
