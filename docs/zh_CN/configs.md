@@ -32,7 +32,7 @@
   - `ssl_cert`: HTTPS 证书文件路径
   - `ssl_key`: HTTPS 证书私钥文件路径
 - `[zfs]`
-  这是用来检查同步目录是否是通过 zfs 挂载了的。如果启用，那么会强制检查文件夹是否挂载到 zpool 上（使用`mountpoint /path`检查）。检查不通过的会直接同步失败，同时根据 zpool 参数输出建议创建的zpool名称，但***不会自动创建对应的 zpool ***
+  这是用来检查同步目录是否是通过 zfs 挂载了的。如果启用，那么会强制检查文件夹是否挂载到 zpool 上（使用`mountpoint /path`检查）。检查不通过的会直接同步失败，同时根据 zpool 参数输出建议创建的zpool名称，但**不会自动创建对应的 zpool**
   - `enable`: 是否启用
   - `zpool`: 建议挂载的 zpool 前缀名
 - `[cgroup]`
